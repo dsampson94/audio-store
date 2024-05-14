@@ -1,0 +1,21 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../prisma/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AudioChunk {
+  id        Int      @id @default(autoincrement())
+  data      Bytes
+  createdAt DateTime @default(now())
+}
+
+model FullRecording {
+  id        Int      @id @default(autoincrement())
+  data      Bytes
+  createdAt DateTime @default(now())
+}
