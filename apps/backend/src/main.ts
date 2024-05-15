@@ -99,6 +99,20 @@ app.get('/api/recordings/:id', async (req, res) => {
   }
 });
 
+
+app.delete('/api/recordings/:id', async (req, res) => {
+  try {
+    const result = await pool.query('DELETE FROM full_recordings WHERE id = $1 RETURNING *', [req.params.id]);
+    if (result.rowCount > 0) {
+      res.status(200).json({ message: 'Recording deleted successfully' });
+    } else {
+      res.status(404).json({ error: 'Recording not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(port, host, () => {
   console.log(`[ ready ] http://${host}:${port}`);
 });
