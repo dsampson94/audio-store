@@ -2,7 +2,7 @@
   <div class="nx-welcome text-center font-sans p-8 bg-gray-100 rounded-lg shadow-md max-w-xl mx-auto mt-12">
     <h2 class="text-2xl font-semibold text-gray-800 mb-5">Audio Recorder</h2>
     <div class="flex justify-center gap-4 mb-5">
-      <button class="btn start bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600" @click="startRecording">
+      <button class="btn start bg-green-700 text-white py-2 px-4 rounded hover:bg-green-800" @click="startRecording">
         Start Recording
       </button>
       <button class="btn stop bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600" @click="stopRecording">
@@ -25,17 +25,18 @@
           <button class="btn save bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 ml-3 mb-2" @click="saveRecordingName(recording.id, recording.name)">
             Save
           </button>
-          <button class="btn delete bg-orange-500 text-white py-2 px-4 rounded hover:bg-orange-600 ml-3 mb-2" @click="deleteRecording(recording.id)">
+          <button class="btn delete bg-red-400 text-white py-2 px-4 rounded hover:bg-red-500 ml-3 mb-2" @click="deleteRecording(recording.id)">
             Delete
           </button>
         </div>
         <div :id="'waveform-' + recording.id" class="mb-2"></div>
-        <audio :src="recording.url" controls class="w-full mb-2 rounded"></audio>
-
+        <audio :src="recording.url" controls class="w-full mb-2 rounded" @play="playWaveform(recording.id)" @pause="pauseWaveform(recording.id)" @timeupdate="syncWaveform(recording.id, $event)">
+        </audio>
       </li>
     </ul>
   </div>
 </template>
+
 <script>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
@@ -51,6 +52,7 @@ export default {
     const wavesurfer = ref(null);
     const recordPlugin = ref(null);
     let scrollingWaveform = false;
+    const wavesurfers = ref({});
 
     const loadRecordings = async () => {
       try {
@@ -67,8 +69,9 @@ export default {
     const initWaveSurfer = () => {
       wavesurfer.value = WaveSurfer.create({
         container: '#waveform',
-        waveColor: 'rgb(200, 0, 200)',
-        progressColor: 'rgb(100, 0, 100)',
+        waveColor: '#00bfff',  // light blue
+        progressColor: '#1e3a8a',  // dark blue
+        interact: false,
       });
 
       recordPlugin.value = wavesurfer.value.registerPlugin(RecordPlugin.create({
@@ -144,10 +147,37 @@ export default {
       container.innerHTML = ''; // Clear existing waveform if any
       const wavesurferInstance = WaveSurfer.create({
         container,
-        waveColor: 'rgb(200, 0, 200)',
-        progressColor: 'rgb(100, 0, 100)',
+        waveColor: '#00bfff',  // light blue
+        progressColor: '#1e3a8a',  // dark blue
         url: recording.url,
+        interact: false,
       });
+
+      const audioElement = document.querySelector(`audio[src="${ recording.url }"]`);
+
+      wavesurferInstance.on('ready', () => {
+        wavesurferInstance.setVolume(0); // Mute the wavesurfer instance to avoid double audio
+      });
+
+      wavesurferInstance.on('seek', (progress) => {
+        audioElement.currentTime = progress * audioElement.duration;
+      });
+
+      audioElement.addEventListener('play', () => {
+        wavesurferInstance.play();
+      });
+
+      audioElement.addEventListener('pause', () => {
+        wavesurferInstance.pause();
+      });
+
+      audioElement.addEventListener('timeupdate', () => {
+        if (!wavesurferInstance.isPlaying()) {
+          wavesurferInstance.seekTo(audioElement.currentTime / audioElement.duration);
+        }
+      });
+
+      wavesurfers.value[recording.id] = wavesurferInstance;
     };
 
     onMounted(() => {
@@ -166,3 +196,7 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+/* Tailwind CSS will handle the styles */
+</style>
