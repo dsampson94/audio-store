@@ -26,17 +26,14 @@ app.get('/', (req, res) => {
 app.post('/api/audio-chunk', (req, res) => {
   const bb = busboy({ headers: req.headers });
   bb.on('file', (name, file) => {
-    const chunks: Buffer[] = [];
+    const chunks = [];
     file.on('data', (data) => {
       chunks.push(data);
     });
     file.on('end', async () => {
       const buffer = Buffer.concat(chunks);
       try {
-        const result = await pool.query(
-          'INSERT INTO audio_chunks (data) VALUES ($1) RETURNING *',
-          [buffer]
-        );
+        const result = await pool.query('INSERT INTO audio_chunks (data) VALUES ($1) RETURNING *', [buffer]);
         res.status(200).json(result.rows[0]);
       } catch (error) {
         res.status(500).json({ error: error.message });
@@ -49,17 +46,14 @@ app.post('/api/audio-chunk', (req, res) => {
 app.post('/api/full-recording', (req, res) => {
   const bb = busboy({ headers: req.headers });
   bb.on('file', (name, file) => {
-    const chunks: Buffer[] = [];
+    const chunks = [];
     file.on('data', (data) => {
       chunks.push(data);
     });
     file.on('end', async () => {
       const buffer = Buffer.concat(chunks);
       try {
-        const result = await pool.query(
-          'INSERT INTO full_recordings (data) VALUES ($1) RETURNING *',
-          [buffer]
-        );
+        const result = await pool.query('INSERT INTO full_recordings (data) VALUES ($1) RETURNING *', [buffer]);
         res.status(200).json(result.rows[0]);
       } catch (error) {
         res.status(500).json({ error: error.message });
@@ -98,7 +92,6 @@ app.get('/api/recordings/:id', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
 
 app.delete('/api/recordings/:id', async (req, res) => {
   try {
