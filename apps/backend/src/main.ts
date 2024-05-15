@@ -45,7 +45,13 @@ app.post('/api/audio-chunk', (req, res) => {
 
 app.post('/api/full-recording', (req, res) => {
   const bb = busboy({ headers: req.headers });
-  bb.on('file', (name, file) => {
+  let name = new Date().toLocaleString(); // Default name is current date and time in a readable format
+  bb.on('field', (fieldname, val) => {
+    if (fieldname === 'name') {
+      name = val; // Override default name if provided
+    }
+  });
+  bb.on('file', (fieldname, file) => {
     const chunks = [];
     file.on('data', (data) => {
       chunks.push(data);
@@ -53,7 +59,7 @@ app.post('/api/full-recording', (req, res) => {
     file.on('end', async () => {
       const buffer = Buffer.concat(chunks);
       try {
-        const result = await pool.query('INSERT INTO full_recordings (data) VALUES ($1) RETURNING *', [buffer]);
+        const result = await pool.query('INSERT INTO full_recordings (data, name) VALUES ($1, $2) RETURNING *', [buffer, name]);
         res.status(200).json(result.rows[0]);
       } catch (error) {
         res.status(500).json({ error: error.message });
