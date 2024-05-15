@@ -8,13 +8,14 @@ This application allows you to record audio from your microphone, visualize the 
 
 ## Table of Contents
 
-- [Setup](#setup)
+- [Overview](#overview)
+- [Setup](#start-the-application)
 - [Development](#development)
   - [Frontend](#frontend)
   - [Backend](#backend)
   - [Database](#database)
   - [API Endpoints](#api-endpoints)
-- [Running the Application](#running-the-application)
+- [Access the Application](#access-the-application)
 - [License](#license)
 
 ## Start the application
@@ -45,20 +46,15 @@ The frontend is built with Vue.js and is located in the frontend directory. It i
     Waveform Visualization: Display an audio waveform in real-time.
     Recordings Management: View, play, and delete previous recordings.
 
-nx serve frontend
+Libraries Used
 
-Build the frontend:
+    Vue
+    Tailwind
+    Wavesurfer.js
 
 ## Backend
 
 The backend is built with Node.js and Express and is located in the backend directory. It provides REST APIs for managing audio recordings and chunks.
-Commands
-
-nx serve backend
-
-Build the backend:
-
-nx build backend
 
 Libraries Used
 
@@ -73,10 +69,10 @@ Database Details
 
     Database Name: audio_store
 
-## Database Tables
+Database Tables
 
-    audio_chunks: Stores individual audio chunks.
     full_recordings: Stores complete recordings.
+    audio_chunks: Stores individual audio chunks.
 
 ## API Endpoints
 
@@ -90,3 +86,7 @@ Database Details
 
     Frontend: http://localhost:5173
     Backend: http://localhost:3000
+
+## License
+
+MIT
