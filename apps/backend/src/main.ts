@@ -1,12 +1,85 @@
 import express from 'express';
+import busboy from 'busboy';
+import pool from './lib/db';
 
 const host = process.env.HOST ?? 'localhost';
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 
 const app = express();
 
+app.use(express.json());
+
 app.get('/', (req, res) => {
   res.send({ message: 'Hello API' });
+});
+
+app.post('/api/audio-chunk', (req, res) => {
+  const bb = busboy({ headers: req.headers });
+  bb.on('file', async (name, file, info) => {
+    const chunks: Buffer[] = [];
+    file.on('data', (data) => {
+      chunks.push(data);
+    });
+    file.on('end', async () => {
+      const buffer = Buffer.concat(chunks);
+      try {
+        const result = await pool.query(
+          'INSERT INTO audio_chunks (data) VALUES ($1) RETURNING *',
+          [buffer]
+        );
+        res.status(200).json(result.rows[0]);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+  });
+  req.pipe(bb);
+});
+
+app.post('/api/full-recording', (req, res) => {
+  const bb = busboy({ headers: req.headers });
+  bb.on('file', async (name, file, info) => {
+    const chunks: Buffer[] = [];
+    file.on('data', (data) => {
+      chunks.push(data);
+    });
+    file.on('end', async () => {
+      const buffer = Buffer.concat(chunks);
+      try {
+        const result = await pool.query(
+          'INSERT INTO full_recordings (data) VALUES ($1) RETURNING *',
+          [buffer]
+        );
+        res.status(200).json(result.rows[0]);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+  });
+  req.pipe(bb);
+});
+
+app.get('/api/recordings', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM full_recordings ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/recordings/:id', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM full_recordings WHERE id = $1', [req.params.id]);
+    const recording = result.rows[0];
+    if (recording) {
+      res.json({ url: `data:audio/wav;base64,${recording.data.toString('base64')}` });
+    } else {
+      res.status(404).send('Recording not found');
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 app.listen(port, host, () => {
