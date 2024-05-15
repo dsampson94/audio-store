@@ -1,21 +1,3 @@
-<template>
-  <div class="nx-welcome">
-    <h2>Audio Recorder</h2>
-    <div class="button-container">
-      <button class="btn start" @click="startRecording">Start Recording</button>
-      <button class="btn stop" @click="stopRecording">Stop Recording</button>
-    </div>
-
-    <h3>Recordings</h3>
-    <ul class="recordings-list">
-      <li v-for="recording in recordings" :key="recording.id" class="recording-card">
-        <audio :src="recording.url" controls></audio>
-        <button class="btn delete" @click="deleteRecording(recording.id)">Delete</button>
-      </li>
-    </ul>
-  </div>
-</template>
-
 <script>
 import { ref } from 'vue';
 import axios from 'axios';
@@ -74,7 +56,7 @@ export default {
 
     const deleteRecording = async (id) => {
       try {
-        await axios.delete(`/api/recordings/${id}`);
+        await axios.delete(`/api/recordings/${ id }`);
         loadRecordings();
       } catch (error) {
         console.error('Error deleting recording:', error);
@@ -86,90 +68,36 @@ export default {
       stopRecording,
       recordings,
       loadRecordings,
-      deleteRecording,
+      deleteRecording
     };
   },
   mounted() {
     this.loadRecordings();
-  },
+  }
 };
 </script>
 
-<style scoped>
-.nx-welcome {
-  text-align: center;
-  font-family: Arial, sans-serif;
-  padding: 20px;
-  background-color: #f5f5f5;
-  border-radius: 8px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  max-width: 600px;
-  margin: 50px auto;
-}
+<template>
+  <div class="nx-welcome text-center font-sans p-8 bg-gray-100 rounded-lg shadow-md max-w-xl mx-auto mt-12">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-5">Audio Recorder</h2>
+    <div class="flex justify-center gap-4 mb-5">
+      <button class="btn start bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600" @click="startRecording">
+        Start Recording
+      </button>
+      <button class="btn stop bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600" @click="stopRecording">Stop
+        Recording
+      </button>
+    </div>
 
-h2 {
-  color: #333;
-  margin-bottom: 20px;
-}
-
-h3 {
-  margin-top: 20px;
-  color: #555;
-}
-
-.button-container {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.btn {
-  padding: 13px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.btn.start {
-  background-color: #4caf50;
-  color: white;
-}
-
-.btn.stop {
-  background-color: #f44336;
-  color: white;
-}
-
-.btn.delete {
-  background-color: #ff5722;
-  color: white;
-  margin: -10px 0 0 10px;
-}
-
-.btn:hover {
-  opacity: 0.9;
-}
-
-.recordings-list {
-  list-style-type: none;
-  padding: 0;
-}
-
-.recording-card {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  margin-bottom: 20px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-}
-
-audio {
-  width: 100%;
-  margin-bottom: 10px;
-}
-</style>
+    <h3 class="text-xl font-medium text-gray-700 mb-5">Recordings</h3>
+    <ul class="list-none p-0">
+      <li v-for="recording in recordings" :key="recording.id"
+          class="recording-card bg-white rounded-lg shadow-sm p-5 mb-5 flex items-center">
+        <audio :src="recording.url" controls class="w-full mb-2 rounded"></audio>
+        <button class="btn delete bg-orange-500 text-white py-2 px-4 rounded hover:bg-orange-600 ml-3 mb-2"
+                @click="deleteRecording(recording.id)">Delete
+        </button>
+      </li>
+    </ul>
+  </div>
+</template>
