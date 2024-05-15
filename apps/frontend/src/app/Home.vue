@@ -23,10 +23,13 @@
             placeholder="Enter recording name"
             class="w-full mb-2 p-2 border border-gray-300 rounded"
           />
-          <button class="btn save bg-blue-500 text-white py-2 px-4 rounded-xl hover:bg-blue-600 ml-3 mb-2" @click="saveRecordingName(recording.id, recording.name)">
-            Save
+          <button class="btn save bg-blue-600 text-white py-2 px-3 rounded-xl hover:bg-blue-700 ml-3 mb-2" @click="saveRecordingName(recording.id, recording.name)">
+            Update
           </button>
-          <button class="btn delete bg-red-400 text-white py-2 px-4 rounded-xl hover:bg-red-500 ml-3 mb-2" @click="deleteRecording(recording.id)">
+          <a :href="recording.url" :download="recording.name + '.wav'" class="btn download bg-blue-400 text-white py-2 px-3 rounded-xl hover:bg-blue-500 ml-1 mb-2">
+            Download
+          </a>
+          <button class="btn delete bg-red-400 text-white py-2 px-3 rounded-xl hover:bg-red-500 ml-1 mb-2" @click="deleteRecording(recording.id)">
             Delete
           </button>
         </div>
@@ -129,6 +132,7 @@ export default {
       try {
         await axios.post('/api/full-recording', formData);
         audioChunks.value = [];
+        loadRecordings();
       } catch (error) {
         console.error('Error saving full recording:', error);
       }
