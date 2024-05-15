@@ -16,34 +16,21 @@
 <script>
 import { ref } from 'vue';
 import axios from 'axios';
-import WaveSurfer from 'wavesurfer.js';
 
 export default {
   name: 'NxWelcome',
   setup() {
     const mediaRecorder = ref(null);
     const audioChunks = ref([]);
-    const waveform = ref(null);
     const recordings = ref([]);
 
     const loadRecordings = async () => {
       try {
         const response = await axios.get('/api/recordings');
-        recordings.value = response.data.map(recording => ({
-          id: recording.id,
-          url: `data:audio/wav;base64,${recording.data}`,
-        }));
+        recordings.value = response.data;
       } catch (error) {
         console.error('Error fetching recordings:', error);
       }
-    };
-
-    const initWaveform = () => {
-      waveform.value = WaveSurfer.create({
-        container: '#waveform',
-        waveColor: 'violet',
-        progressColor: 'purple'
-      });
     };
 
     const startRecording = async () => {
@@ -53,9 +40,6 @@ export default {
 
         mediaRecorder.value.ondataavailable = (event) => {
           audioChunks.value.push(event.data);
-          if (mediaRecorder.value?.state === 'recording') {
-            setTimeout(() => sendAudioChunk(event.data), 5000);
-          }
         };
 
         mediaRecorder.value.onstop = async () => {
@@ -64,11 +48,6 @@ export default {
         };
 
         mediaRecorder.value.start();
-        initWaveform();
-        waveform.value.microphone = WaveSurfer.microphone.create({
-          mediaStream: stream,
-        });
-        waveform.value.microphone.start();
       } catch (error) {
         console.error('Error starting recording:', error);
       }
@@ -76,17 +55,6 @@ export default {
 
     const stopRecording = () => {
       mediaRecorder.value?.stop();
-      waveform.value.microphone.stop();
-    };
-
-    const sendAudioChunk = async (chunk) => {
-      const formData = new FormData();
-      formData.append('audio', chunk, 'chunk.wav');
-      try {
-        await axios.post('/api/audio-chunk', formData);
-      } catch (error) {
-        console.error('Error uploading audio chunk:', error);
-      }
     };
 
     const saveFullRecording = async () => {
@@ -135,11 +103,5 @@ ul {
 audio {
   display: block;
   margin: 10px 0;
-}
-
-#waveform {
-  width: 600px;
-  height: 100px;
-  margin: 0 auto;
 }
 </style>

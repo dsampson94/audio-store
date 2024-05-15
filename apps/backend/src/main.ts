@@ -72,7 +72,11 @@ app.post('/api/full-recording', (req, res) => {
 app.get('/api/recordings', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM full_recordings ORDER BY created_at DESC');
-    res.json(result.rows);
+    const recordings = result.rows.map(recording => ({
+      id: recording.id,
+      url: `data:audio/wav;base64,${recording.data.toString('base64')}`
+    }));
+    res.json(recordings);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -83,7 +87,10 @@ app.get('/api/recordings/:id', async (req, res) => {
     const result = await pool.query('SELECT * FROM full_recordings WHERE id = $1', [req.params.id]);
     const recording = result.rows[0];
     if (recording) {
-      res.json({ url: `data:audio/wav;base64,${recording.data.toString('base64')}` });
+      res.json({
+        id: recording.id,
+        url: `data:audio/wav;base64,${recording.data.toString('base64')}`
+      });
     } else {
       res.status(404).send('Recording not found');
     }
