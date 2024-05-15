@@ -9,5 +9,6 @@ export const createFullRecordingsTable = `
 CREATE TABLE IF NOT EXISTS full_recordings (
   id SERIAL PRIMARY KEY,
   data BYTEA NOT NULL,
+  name TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );`;

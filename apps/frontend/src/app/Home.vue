@@ -14,16 +14,28 @@
 
     <h3 class="text-xl font-medium text-gray-700 mb-5">Recordings</h3>
     <ul class="list-none p-0">
-      <li v-for="recording in recordings" :key="recording.id" class="recording-card bg-white rounded-lg shadow-sm p-5 mb-5 flex items-center">
+      <li v-for="recording in recordings" :key="recording.id" class="recording-card bg-white rounded-lg shadow-sm p-5 mb-5">
+        <div class="flex items-center justify-between mb-2">
+          <input
+            type="text"
+            v-model="recording.name"
+            placeholder="Enter recording name"
+            class="w-full mb-2 p-2 border border-gray-300 rounded"
+          />
+          <button class="btn save bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 ml-3 mb-2" @click="saveRecordingName(recording.id, recording.name)">
+            Save
+          </button>
+          <button class="btn delete bg-orange-500 text-white py-2 px-4 rounded hover:bg-orange-600 ml-3 mb-2" @click="deleteRecording(recording.id)">
+            Delete
+          </button>
+        </div>
+        <div :id="'waveform-' + recording.id" class="mb-2"></div>
         <audio :src="recording.url" controls class="w-full mb-2 rounded"></audio>
-        <button class="btn delete bg-orange-500 text-white py-2 px-4 rounded hover:bg-orange-600 ml-3 mb-2" @click="deleteRecording(recording.id)">
-          Delete
-        </button>
+
       </li>
     </ul>
   </div>
 </template>
-
 <script>
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
@@ -37,13 +49,16 @@ export default {
     const audioChunks = ref([]);
     const recordings = ref([]);
     const wavesurfer = ref(null);
-    const record = ref(null);
+    const recordPlugin = ref(null);
     let scrollingWaveform = false;
 
     const loadRecordings = async () => {
       try {
         const response = await axios.get('/api/recordings');
         recordings.value = response.data;
+        recordings.value.forEach(recording => {
+          setTimeout(() => createWaveSurfer(recording), 0);
+        });
       } catch (error) {
         console.error('Error fetching recordings:', error);
       }
@@ -56,31 +71,15 @@ export default {
         progressColor: 'rgb(100, 0, 100)',
       });
 
-      record.value = wavesurfer.value.registerPlugin(RecordPlugin.create({ scrollingWaveform, renderRecordedAudio: false }));
+      recordPlugin.value = wavesurfer.value.registerPlugin(RecordPlugin.create({
+        scrollingWaveform,
+        renderRecordedAudio: false
+      }));
 
-      record.value.on('record-end', (blob) => {
-        const container = document.querySelector('#recordings');
+      recordPlugin.value.on('record-end', (blob) => {
         const recordedUrl = URL.createObjectURL(blob);
-
-        const newWavesurfer = WaveSurfer.create({
-          container,
-          waveColor: 'rgb(200, 100, 0)',
-          progressColor: 'rgb(100, 50, 0)',
-          url: recordedUrl,
-        });
-
-        const button = container.appendChild(document.createElement('button'));
-        button.textContent = 'Play';
-        button.onclick = () => newWavesurfer.playPause();
-        newWavesurfer.on('pause', () => (button.textContent = 'Play'));
-        newWavesurfer.on('play', () => (button.textContent = 'Pause'));
-
-        const link = container.appendChild(document.createElement('a'));
-        Object.assign(link, {
-          href: recordedUrl,
-          download: 'recording.' + blob.type.split(';')[0].split('/')[1] || 'webm',
-          textContent: 'Download recording',
-        });
+        saveFullRecording(blob);
+        loadRecordings();
       });
     };
 
@@ -125,11 +124,30 @@ export default {
 
     const deleteRecording = async (id) => {
       try {
-        await axios.delete(`/api/recordings/${id}`);
+        await axios.delete(`/api/recordings/${ id }`);
         loadRecordings();
       } catch (error) {
         console.error('Error deleting recording:', error);
       }
+    };
+
+    const saveRecordingName = async (id, name) => {
+      try {
+        await axios.put(`/api/recordings/${ id }`, { name });
+      } catch (error) {
+        console.error('Error updating recording name:', error);
+      }
+    };
+
+    const createWaveSurfer = (recording) => {
+      const container = document.querySelector(`#waveform-${ recording.id }`);
+      container.innerHTML = ''; // Clear existing waveform if any
+      const wavesurferInstance = WaveSurfer.create({
+        container,
+        waveColor: 'rgb(200, 0, 200)',
+        progressColor: 'rgb(100, 0, 100)',
+        url: recording.url,
+      });
     };
 
     onMounted(() => {
@@ -143,11 +161,8 @@ export default {
       recordings,
       loadRecordings,
       deleteRecording,
+      saveRecordingName,
     };
   },
 };
 </script>
-
-<style scoped>
-/* Tailwind CSS will handle the styles */
-</style>

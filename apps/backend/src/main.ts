@@ -68,7 +68,9 @@ app.get('/api/recordings', async (req, res) => {
     const result = await pool.query('SELECT * FROM full_recordings ORDER BY created_at DESC');
     const recordings = result.rows.map(recording => ({
       id: recording.id,
-      url: `data:audio/wav;base64,${recording.data.toString('base64')}`
+      url: `data:audio/wav;base64,${recording.data.toString('base64')}`,
+      name: recording.name,
+      created_at: recording.created_at
     }));
     res.json(recordings);
   } catch (error) {
@@ -83,10 +85,26 @@ app.get('/api/recordings/:id', async (req, res) => {
     if (recording) {
       res.json({
         id: recording.id,
-        url: `data:audio/wav;base64,${recording.data.toString('base64')}`
+        url: `data:audio/wav;base64,${recording.data.toString('base64')}`,
+        name: recording.name,
+        created_at: recording.created_at
       });
     } else {
       res.status(404).send('Recording not found');
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/recordings/:id', async (req, res) => {
+  const { name } = req.body;
+  try {
+    const result = await pool.query('UPDATE full_recordings SET name = $1 WHERE id = $2 RETURNING *', [name, req.params.id]);
+    if (result.rowCount > 0) {
+      res.status(200).json(result.rows[0]);
+    } else {
+      res.status(404).json({ error: 'Recording not found' });
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
