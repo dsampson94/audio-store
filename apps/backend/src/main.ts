@@ -1,11 +1,21 @@
 import express from 'express';
 import busboy from 'busboy';
 import pool from './lib/db';
+import { createAudioChunksTable, createFullRecordingsTable } from './lib/queries';
 
 const host = process.env.HOST ?? 'localhost';
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 
 const app = express();
+
+// Create tables if they don't exist
+pool.query(createAudioChunksTable)
+  .then(() => console.log('Audio chunks table created'))
+  .catch((err) => console.error('Error creating audio chunks table:', err));
+
+pool.query(createFullRecordingsTable)
+  .then(() => console.log('Full recordings table created'))
+  .catch((err) => console.error('Error creating full recordings table:', err));
 
 app.use(express.json());
 
@@ -15,7 +25,7 @@ app.get('/', (req, res) => {
 
 app.post('/api/audio-chunk', (req, res) => {
   const bb = busboy({ headers: req.headers });
-  bb.on('file', async (name, file, info) => {
+  bb.on('file', (name, file) => {
     const chunks: Buffer[] = [];
     file.on('data', (data) => {
       chunks.push(data);
@@ -38,7 +48,7 @@ app.post('/api/audio-chunk', (req, res) => {
 
 app.post('/api/full-recording', (req, res) => {
   const bb = busboy({ headers: req.headers });
-  bb.on('file', async (name, file, info) => {
+  bb.on('file', (name, file) => {
     const chunks: Buffer[] = [];
     file.on('data', (data) => {
       chunks.push(data);
