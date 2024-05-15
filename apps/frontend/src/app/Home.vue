@@ -1,5 +1,5 @@
 <template>
-  <div class="nx-welcome text-center font-sans p-8 bg-blue-50 rounded-xl shadow-md max-w-xl mx-auto mt-12">
+  <div class="nx-welcome text-center font-sans p-6 bg-blue-50 rounded-xl shadow-md max-w-xl mx-auto mt-12">
     <h2 class="text-2xl font-semibold text-gray-800 mb-5">Audio Recorder</h2>
     <div class="flex justify-center gap-4 mb-5">
       <button class="btn start bg-blue-700 text-white py-2 px-4 rounded hover:bg-blue-800" @click="startRecording">
@@ -13,9 +13,9 @@
     <div id="waveform" class="mb-5"></div>
 
     <h3 class="text-xl font-medium text-gray-700 mb-5">Recordings</h3>
-    <ul class="list-none p-0">
+    <ul class="list-none">
       <li v-for="recording in recordings" :key="recording.id"
-          class="recording-card bg-white rounded-lg shadow-md p-5 mb-5">
+          class="recording-card bg-white rounded-lg shadow-md p-4 mb-3">
         <div class="flex items-center justify-between mb-2">
           <input
             type="text"
@@ -32,8 +32,8 @@
             Delete
           </button>
         </div>
-        <div :id="'waveform-' + recording.id" class="mb-2"></div>
-        <audio :src="recording.url" controls class="w-full mb-2 rounded" @play="playWaveform(recording.id)"
+        <div :id="'waveform-' + recording.id"></div>
+        <audio :src="recording.url" controls class="w-full rounded" @play="playWaveform(recording.id)"
                @pause="pauseWaveform(recording.id)" @timeupdate="syncWaveform(recording.id, $event)">
         </audio>
       </li>
