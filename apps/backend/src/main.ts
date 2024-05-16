@@ -10,11 +10,11 @@ const app = express();
 
 // Create tables if they don't exist
 pool.query(createAudioChunksTable)
-  .then(() => console.log('Audio chunks table created'))
+  .then(() => console.log('Audio chunks table exists'))
   .catch((err) => console.error('Error creating audio chunks table:', err));
 
 pool.query(createFullRecordingsTable)
-  .then(() => console.log('Full recordings table created'))
+  .then(() => console.log('Full recordings table exists'))
   .catch((err) => console.error('Error creating full recordings table:', err));
 
 app.use(express.json());

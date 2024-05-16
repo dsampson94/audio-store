@@ -1,5 +1,5 @@
 <template>
-  <div class="nx-welcome text-center font-sans p-6 bg-gradient-to-r from-blue-50 to-blue-100 select-none rounded-xl shadow-md max-w-xl mx-auto mt-12">
+  <div class="nx-welcome text-center font-sans p-6 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl shadow-md max-w-xl mx-auto mt-12">
     <h2 class="text-3xl font-bold text-gray-900 mb-5">Audio Store</h2>
     <div class="flex justify-center gap-4 mb-5">
       <button id="record" class="btn start bg-green-600 text-white py-2 px-6 rounded-xl hover:bg-green-700" @click="toggleRecording">
@@ -10,7 +10,11 @@
       </button>
     </div>
 
-    <div id="waveform" class="mb-5 h-32 bg-white rounded-lg shadow-inner"></div>
+    <div id="waveform" class="mb-5 h-32 bg-white rounded-lg shadow-inner relative">
+      <svg class="absolute top-0 left-0 w-full h-full">
+        <line x1="0" y1="50%" x2="100%" y2="50%" stroke="#00bfff" stroke-width="2" />
+      </svg>
+    </div>
     <div id="progress" class="text-xl text-gray-700 mb-5">{{ formattedTime }}</div>
 
     <h3 class="text-2xl font-medium text-gray-800 mb-5">Recordings</h3>
@@ -33,7 +37,11 @@
             Delete
           </button>
         </div>
-        <div :id="'waveform-' + recording.id" class="waveform-instance mb-3"></div>
+        <div :id="'waveform-' + recording.id" class="waveform-instance mb-3 relative">
+          <svg class="absolute top-0 left-0 w-full h-full">
+            <line x1="0" y1="50%" x2="100%" y2="50%" stroke="#00bfff" stroke-width="4" />
+          </svg>
+        </div>
         <audio :src="recording.url" controls class="w-full rounded-lg" @play="playWaveform(recording.id)"
                @pause="pauseWaveform(recording.id)" @timeupdate="syncWaveform(recording.id, $event)">
         </audio>
@@ -94,6 +102,7 @@ export default {
         container: '#waveform',
         waveColor: '#00bfff',
         progressColor: '#1e3a8a',
+        cursorColor: '#00bfff', // Ensure the blue line is visible
       });
 
       recordPlugin.value = wavesurfer.value.registerPlugin(RecordPlugin.create({
@@ -211,6 +220,7 @@ export default {
         container,
         waveColor: '#00bfff',
         progressColor: '#1e3a8a',
+        cursorColor: '#00bfff', // Ensure the blue line is visible
         url: recording.url,
         interact: false,
       });
