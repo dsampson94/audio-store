@@ -48,9 +48,10 @@ The frontend is built with Vue.js and is located in the frontend directory. It i
 
 Libraries Used
 
-    Vue
-    Tailwind
-    Wavesurfer.js
+    "vue": "^3.3.4",
+    "vue-toastification": "^2.0.0-rc.5",
+    "wavesurfer.js": "^7.7.14"
+    "tailwindcss": "^3.4.3",
 
 ## Backend
 
@@ -58,9 +59,13 @@ The backend is built with Node.js and Express and is located in the backend dire
 
 Libraries Used
 
-    Express
-    Busboy
-    PostgreSQL
+    "nx": "19.0.3",  
+    "vite": "~5.0.0",
+    "axios": "^1.6.0",
+    "busboy": "^1.6.0",
+    "express": "~4.18.1",
+    "pg": "^8.11.5",
+    "typescript": "~5.4.2",
 
 ## Database
 
