@@ -1,5 +1,5 @@
 <template>
-  <div class="nx-welcome text-center font-sans p-6 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl shadow-md max-w-xl mx-auto mt-12">
+  <div class="nx-welcome text-center font-sans p-6 bg-gradient-to-r from-blue-50 to-blue-100 select-none rounded-xl shadow-md max-w-xl mx-auto mt-12">
     <h2 class="text-3xl font-bold text-gray-900 mb-5">Audio Store</h2>
     <div class="flex justify-center gap-4 mb-5">
       <button id="record" class="btn start bg-green-600 text-white py-2 px-6 rounded-xl hover:bg-green-700" @click="toggleRecording">
@@ -47,10 +47,12 @@ import { onMounted, ref, computed } from 'vue';
 import axios from 'axios';
 import WaveSurfer from 'wavesurfer.js';
 import RecordPlugin from 'wavesurfer.js/dist/plugins/record.esm.js';
+import { useToast } from 'vue-toastification';
 
 export default {
   name: 'NxWelcome',
   setup() {
+    const toast = useToast();
     const recordings = ref([]);
     const wavesurfer = ref(null);
     const recordPlugin = ref(null);
@@ -66,7 +68,7 @@ export default {
     const formattedTime = computed(() => {
       const minutes = Math.floor(timer.value / 60);
       const seconds = timer.value % 60;
-      return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      return `${ minutes.toString().padStart(2, '0') }:${ seconds.toString().padStart(2, '0') }`;
     });
 
     const startTimer = () => {
@@ -104,6 +106,7 @@ export default {
         saveFullRecording(blob, name);
         loadRecordings();
         resetTimer();
+        toast.success('Recording saved successfully!');
       });
       loadRecordings();
     };
@@ -174,6 +177,7 @@ export default {
       try {
         await axios.delete(`/api/recordings/${ id }`);
         loadRecordings();
+        toast.success('Recording deleted successfully!');
       } catch (error) {
         console.error('Error deleting recording:', error);
       }
@@ -182,6 +186,7 @@ export default {
     const saveRecordingName = async (id, name) => {
       try {
         await axios.put(`/api/recordings/${ id }`, { name });
+        toast.success('Recording name updated successfully!');
       } catch (error) {
         console.error('Error updating recording name:', error);
       }
