@@ -11,7 +11,7 @@
     </div>
 
     <div id="waveform" class="mb-5 h-32 bg-white rounded-lg shadow-inner"></div>
-    <div id="progress" class="text-xl text-gray-700 mb-5">00:00</div>
+    <div id="progress" class="text-xl text-gray-700 mb-5">{{ formattedTime }}</div>
 
     <h3 class="text-2xl font-medium text-gray-800 mb-5">Recordings</h3>
     <ul class="list-none" id="recordings">
@@ -43,7 +43,7 @@
 </template>
 
 <script>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import axios from 'axios';
 import WaveSurfer from 'wavesurfer.js';
 import RecordPlugin from 'wavesurfer.js/dist/plugins/record.esm.js';
@@ -59,6 +59,33 @@ export default {
     const isRecording = ref(false);
     const isPaused = ref(false);
     const scrollingWaveform = ref(false);
+
+    const timer = ref(0);
+    const intervalId = ref(null);
+
+    const formattedTime = computed(() => {
+      const minutes = Math.floor(timer.value / 60);
+      const seconds = timer.value % 60;
+      return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    });
+
+    const startTimer = () => {
+      if (!intervalId.value) {
+        intervalId.value = setInterval(() => {
+          timer.value += 1;
+        }, 1000);
+      }
+    };
+
+    const stopTimer = () => {
+      clearInterval(intervalId.value);
+      intervalId.value = null;
+    };
+
+    const resetTimer = () => {
+      stopTimer();
+      timer.value = 0;
+    };
 
     const createWaveSurfer = () => {
       wavesurfer.value = WaveSurfer.create({
@@ -76,6 +103,7 @@ export default {
         const name = new Date().toLocaleString();
         saveFullRecording(blob, name);
         loadRecordings();
+        resetTimer();
       });
       loadRecordings();
     };
@@ -87,6 +115,7 @@ export default {
         document.querySelector('#record').textContent = 'Record';
         document.querySelector('#pause').style.display = 'none';
         isRecording.value = false;
+        stopTimer();
         return;
       }
 
@@ -103,15 +132,18 @@ export default {
           if (chunk) sendAudioChunk(chunk);
         }
       }, 5000);
+      startTimer();
     };
 
     const togglePause = () => {
       if (recordPlugin.value.isPaused()) {
         recordPlugin.value.resumeRecording();
         document.querySelector('#pause').textContent = 'Pause';
+        startTimer();
       } else {
         recordPlugin.value.pauseRecording();
         document.querySelector('#pause').textContent = 'Resume';
+        stopTimer();
       }
     };
 
@@ -140,7 +172,7 @@ export default {
 
     const deleteRecording = async (id) => {
       try {
-        await axios.delete(`/api/recordings/${id}`);
+        await axios.delete(`/api/recordings/${ id }`);
         loadRecordings();
       } catch (error) {
         console.error('Error deleting recording:', error);
@@ -149,7 +181,7 @@ export default {
 
     const saveRecordingName = async (id, name) => {
       try {
-        await axios.put(`/api/recordings/${id}`, { name });
+        await axios.put(`/api/recordings/${ id }`, { name });
       } catch (error) {
         console.error('Error updating recording name:', error);
       }
@@ -168,7 +200,7 @@ export default {
     };
 
     const createWaveSurferInstance = (recording) => {
-      const container = document.querySelector(`#waveform-${recording.id}`);
+      const container = document.querySelector(`#waveform-${ recording.id }`);
       container.innerHTML = '';
       const wavesurferInstance = WaveSurfer.create({
         container,
@@ -178,7 +210,7 @@ export default {
         interact: false,
       });
 
-      const audioElement = document.querySelector(`audio[src="${recording.url}"]`);
+      const audioElement = document.querySelector(`audio[src="${ recording.url }"]`);
 
       wavesurferInstance.on('ready', () => {
         wavesurferInstance.setVolume(0);
@@ -214,7 +246,8 @@ export default {
       recordings,
       scrollingWaveform,
       saveRecordingName,
-      deleteRecording
+      deleteRecording,
+      formattedTime
     };
   },
 };
