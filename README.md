@@ -1,10 +1,10 @@
 # Audio Store Application
 
-✨ **This project has been bootstrapped with [Nx, Smart Monorepos · Fast CI](https://nx.dev) and was created as a technical assessment for a job application. The project is a Fullstack JavaScript app focusing on audio capture, storage and visualisation. There was a 48 hour deadline and it's development generally went smoothly.** ✨
+✨ **This project has been bootstrapped with [Nx, Smart Monorepos · Fast CI](https://nx.dev) and was created as a technical assessment. The project is a Fullstack JavaScript application focusing on audio capture, storage and visualisation. There was a 48 hour deadline and it's development generally went smoothly.** ✨
 
 ## Overview
 
-Audio Store allows you to record audio from your PC microphone, visualize the audio waveform, and store the recordings. It includes a Vue.js frontend and a Node.js backend with a PostgreSQL database. The application is ready to be containerized using Docker and orchestrated with Docker Compose.
+Audio Store allows you to record audio from your PC microphone, visualize the audio waveform as well as store and retrieve the recordings. It includes a Vue.js frontend and a Node.js backend (Express) connected to a local PostgreSQL database. The application is ready to be containerized using Docker and orchestrated with Docker Compose.
 
 ## Table of Contents
 
@@ -44,7 +44,7 @@ The frontend is built with Vue.js and is located in the frontend directory. It i
 
     Audio Recording: Capture audio from the microphone.
     Waveform Visualization: Display an audio waveform in real-time.
-    Recordings Management: View, play, and delete previous recordings.
+    Recordings Management: View, play, download and delete previous recordings.
 
 Libraries Used
 
@@ -64,7 +64,8 @@ Libraries Used
 
 ## Database
 
-We use PostgreSQL to store audio chunks and complete recordings. The database configuration is defined in the docker-compose.yml file.
+It uses PostgreSQL to store audio chunks and complete recordings. The database configuration is defined in the docker-compose.yml file. The chunking functionality was not achieved.
+
 Database Details
 
     Database Name: audio_store
