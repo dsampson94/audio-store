@@ -1,74 +1,68 @@
 import express from 'express';
 import busboy from 'busboy';
 import pool from './lib/db';
-import { createAudioChunksTable, createFullRecordingsTable } from './lib/queries';
+import { createFullRecordingsTable } from './lib/queries';
 
 const host = process.env.HOST ?? 'localhost';
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
 
 const app = express();
 
-// Create tables if they don't exist
-pool.query(createAudioChunksTable)
-  .then(() => console.log('Audio chunks table exists'))
-  .catch((err) => console.error('Error creating audio chunks table:', err));
+// Setup database and create tables if they don't exist
+const setupDatabase = async () => {
+  try {
+    await pool.query(createFullRecordingsTable);
+    console.log('Full recordings table exists');
+  } catch (err) {
+    console.error('Error setting up tables:', err);
+    process.exit(1);
+  }
+};
 
-pool.query(createFullRecordingsTable)
-  .then(() => console.log('Full recordings table exists'))
-  .catch((err) => console.error('Error creating full recordings table:', err));
+setupDatabase().then(() => {
+  app.listen(port, host, () => {
+    console.log(`[ ready ] http://${host}:${port}`);
+  });
+});
 
 app.use(express.json());
 
+// Endpoint to test if the API is working
 app.get('/', (req, res) => {
   res.send({ message: 'Hello API' });
 });
 
-app.post('/api/audio-chunk', (req, res) => {
+// Helper function to handle file uploads
+const handleFileUpload = (req, res, query, params) => {
   const bb = busboy({ headers: req.headers });
   bb.on('file', (name, file) => {
     const chunks = [];
-    file.on('data', (data) => {
-      chunks.push(data);
-    });
+    file.on('data', (data) => chunks.push(data));
     file.on('end', async () => {
       const buffer = Buffer.concat(chunks);
       try {
-        const result = await pool.query('INSERT INTO audio_chunks (data) VALUES ($1) RETURNING *', [buffer]);
+        const result = await pool.query(query, params(buffer));
         res.status(200).json(result.rows[0]);
       } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: 'Failed to upload file' });
+        console.error('Failed to upload file:', error);
       }
     });
   });
   req.pipe(bb);
-});
+};
 
+// Endpoint to handle uploading a full recording
 app.post('/api/full-recording', (req, res) => {
+  let name = new Date().toLocaleString();
   const bb = busboy({ headers: req.headers });
-  let name = new Date().toLocaleString(); // Default name is current date and time in a readable format
   bb.on('field', (fieldname, val) => {
-    if (fieldname === 'name') {
-      name = val; // Override default name if provided
-    }
+    if (fieldname === 'name') name = val;
   });
-  bb.on('file', (fieldname, file) => {
-    const chunks = [];
-    file.on('data', (data) => {
-      chunks.push(data);
-    });
-    file.on('end', async () => {
-      const buffer = Buffer.concat(chunks);
-      try {
-        const result = await pool.query('INSERT INTO full_recordings (data, name) VALUES ($1, $2) RETURNING *', [buffer, name]);
-        res.status(200).json(result.rows[0]);
-      } catch (error) {
-        res.status(500).json({ error: error.message });
-      }
-    });
-  });
-  req.pipe(bb);
+  handleFileUpload(req, res, 'INSERT INTO full_recordings (data, name) VALUES ($1, $2) RETURNING *', buffer => [buffer, name]);
 });
 
+// Endpoint to fetch all recordings
 app.get('/api/recordings', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM full_recordings ORDER BY created_at DESC');
@@ -80,29 +74,12 @@ app.get('/api/recordings', async (req, res) => {
     }));
     res.json(recordings);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to fetch recordings' });
+    console.error('Failed to fetch recordings:', error);
   }
 });
 
-app.get('/api/recordings/:id', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM full_recordings WHERE id = $1', [req.params.id]);
-    const recording = result.rows[0];
-    if (recording) {
-      res.json({
-        id: recording.id,
-        url: `data:audio/wav;base64,${recording.data.toString('base64')}`,
-        name: recording.name,
-        created_at: recording.created_at
-      });
-    } else {
-      res.status(404).send('Recording not found');
-    }
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
+// Endpoint to update the name of a recording by its ID
 app.put('/api/recordings/:id', async (req, res) => {
   const { name } = req.body;
   try {
@@ -113,10 +90,12 @@ app.put('/api/recordings/:id', async (req, res) => {
       res.status(404).json({ error: 'Recording not found' });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to update recording' });
+    console.error('Failed to update recording:', error);
   }
 });
 
+// Endpoint to delete a recording by its ID
 app.delete('/api/recordings/:id', async (req, res) => {
   try {
     const result = await pool.query('DELETE FROM full_recordings WHERE id = $1 RETURNING *', [req.params.id]);
@@ -126,10 +105,8 @@ app.delete('/api/recordings/:id', async (req, res) => {
       res.status(404).json({ error: 'Recording not found' });
     }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Failed to delete recording' });
+    console.error('Failed to delete recording:', error);
   }
 });
 
-app.listen(port, host, () => {
-  console.log(`[ ready ] http://${host}:${port}`);
-});
