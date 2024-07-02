@@ -1,54 +1,46 @@
 {
-  "name": "backend",
+  "name": "frontend",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/backend/src",
   "projectType": "application",
-  "tags": [],
+  "sourceRoot": "apps/frontend/src",
   "targets": {
     "build": {
-      "executor": "@nx/esbuild:esbuild",
+      "executor": "@nrwl/web:build",
       "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
       "options": {
-        "platform": "node",
-        "outputPath": "dist/apps/backend",
-        "format": ["cjs"],
-        "bundle": false,
-        "main": "apps/backend/src/main.ts",
-        "tsConfig": "apps/backend/tsconfig.app.json",
-        "assets": ["apps/backend/src/assets"],
-        "generatePackageJson": true,
-        "esbuildOptions": {
-          "sourcemap": true,
-          "outExtension": {
-            ".js": ".js"
-          }
-        }
+        "outputPath": "dist/apps/frontend",
+        "index": "apps/frontend/src/index.html",
+        "main": "apps/frontend/src/main.tsx",
+        "polyfills": "apps/frontend/src/polyfills.ts",
+        "tsConfig": "apps/frontend/tsconfig.app.json",
+        "assets": ["apps/frontend/src/favicon.ico", "apps/frontend/src/assets"],
+        "styles": ["apps/frontend/src/styles.css"],
+        "scripts": []
       },
       "configurations": {
-        "development": {},
         "production": {
-          "esbuildOptions": {
-            "sourcemap": false,
-            "outExtension": {
-              ".js": ".js"
+          "fileReplacements": [
+            {
+              "replace": "apps/frontend/src/environments/environment.ts",
+              "with": "apps/frontend/src/environments/environment.prod.ts"
             }
-          }
-        }
-      }
-    },
-    "serve": {
-      "executor": "@nx/js:node",
-      "defaultConfiguration": "development",
-      "options": {
-        "buildTarget": "backend:build"
-      },
-      "configurations": {
-        "development": {
-          "buildTarget": "backend:build:development"
-        },
-        "production": {
-          "buildTarget": "backend:build:production"
+          ],
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "extractCss": true,
+          "namedChunks": false,
+          "aot": true,
+          "extractLicenses": true,
+          "vendorChunk": false,
+          "buildOptimizer": true,
+          "budgets": [
+            {
+              "type": "initial",
+              "maximumWarning": "2mb",
+              "maximumError": "5mb"
+            }
+          ]
         }
       }
     }
